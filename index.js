@@ -26,8 +26,8 @@ app.use('/img', express.static(path.join(__dirname, 'img')));
 
 // Endpoint principal que retorna a imagem e aceita parâmetros
 app.get('/api/imagem', async (req, res) => {
-    // Pega os parâmetros 'email', 'horario_disparo_email', 'dia', 'id_hubspot' e 'nome_escola' da query string
-    const { email, horario_disparo_email, dia, id_hubspot, nome_escola } = req.query; 
+    // Pega os parâmetros 'email', 'horario_disparo_email', 'dia', 'id_hubspot', 'nome_escola' e 'titulo_email' da query string
+    const { email, horario_disparo_email, dia, id_hubspot, nome_escola, titulo_email } = req.query; 
 
     // Validação básica: 'email' é obrigatório
     if (!email) {
@@ -47,6 +47,11 @@ app.get('/api/imagem', async (req, res) => {
     // Opcional: Validação para 'nome_escola'
     if (!nome_escola) {
         console.warn('Parâmetro "nome_escola" não fornecido.');
+    }
+
+    // Opcional: Validação para 'titulo_email'
+    if (!titulo_email) {
+        console.warn('Parâmetro "titulo_email" não fornecido ou está vazio.');
     }
 
     // --- Lógica de Conversão do Parâmetro 'dia' ---
@@ -70,15 +75,16 @@ app.get('/api/imagem', async (req, res) => {
         timestamp_abertura: timestamp_abertura, // Quando o e-mail foi aberto (pixel carregado)
         horario_disparo_email: horario_disparo_email || 'N/A', // Horário que o e-mail foi disparado (passado como param)
         dia_rastreamento: dia_convertido, // O DIA convertido para "Dia 1", "Dia 4", etc.
-        id_hubspot: id_hubspot || 'N/A', // Novo parâmetro: ID do HubSpot
-        nome_escola: nome_escola || 'N/A', // Novo parâmetro: Nome da Escola
+        id_hubspot: id_hubspot || 'N/A', // Parâmetro: ID do HubSpot
+        nome_escola: nome_escola || 'N/A', // Parâmetro: Nome da Escola
+        titulo_email: titulo_email || 'N/A', // NOVO: Parâmetro: Título do E-mail (pode ser vazio)
         source: 'api-imagem-vercel' // Adicione qualquer outra informação que desejar
     };
 
     try {
         // Enviar dados via GET (parâmetros na URL)
         // É importante codificar os componentes da URL para evitar problemas com caracteres especiais
-        const n8nUrlWithParams = `${N8N_WEBHOOK_URL}?email=${encodeURIComponent(email)}&timestamp_abertura=${encodeURIComponent(timestamp_abertura)}&horario_disparo_email=${encodeURIComponent(horario_disparo_email || 'N/A')}&dia_rastreamento=${encodeURIComponent(dia_convertido)}&id_hubspot=${encodeURIComponent(id_hubspot || 'N/A')}&nome_escola=${encodeURIComponent(nome_escola || 'N/A')}`;
+        const n8nUrlWithParams = `${N8N_WEBHOOK_URL}?email=${encodeURIComponent(email)}&timestamp_abertura=${encodeURIComponent(timestamp_abertura)}&horario_disparo_email=${encodeURIComponent(horario_disparo_email || 'N/A')}&dia_rastreamento=${encodeURIComponent(dia_convertido)}&id_hubspot=${encodeURIComponent(id_hubspot || 'N/A')}&nome_escola=${encodeURIComponent(nome_escola || 'N/A')}&titulo_email=${encodeURIComponent(titulo_email || 'N/A')}`;
         
         await axios.get(n8nUrlWithParams);
         console.log(`Dados enviados para o n8n (GET):`, n8nUrlWithParams);
@@ -115,12 +121,12 @@ app.get('/api/imagem', async (req, res) => {
 // Endpoint de teste simples
 app.get('/', (req, res) => {
     // URL de exemplo agora inclui todos os novos parâmetros
-    res.send('API de imagem rodando! Acesse /api/imagem?email=seu@email.com&horario_disparo_email=2025-06-12T10:00:00-03:00&dia=43910685&id_hubspot=123456&nome_escola=EscolaTesteVercel');
+    res.send('API de imagem rodando! Acesse /api/imagem?email=seu@email.com&horario_disparo_email=2025-06-12T10:00:00-03:00&dia=43910685&id_hubspot=123456&nome_escola=EscolaTesteVercel&titulo_email=TituloDoEmailDeTeste');
 });
 
 // Inicia o servidor
 app.listen(port, () => {
     console.log(`Servidor rodando em http://localhost:${port}`);
-    console.log('Acesse o endpoint de imagem em: /api/imagem?email=seu@email.com&horario_disparo_email=2025-06-12T10:00:00-03:00&dia=43910685&id_hubspot=123456&nome_escola=EscolaTesteVercel');
-    console.log('Os dados de abertura, disparo, dia, id_hubspot e nome_escola serão enviados para o n8n.');
+    console.log('Acesse o endpoint de imagem em: /api/imagem?email=seu@email.com&horario_disparo_email=2025-06-12T10:00:00-03:00&dia=43910685&id_hubspot=123456&nome_escola=EscolaTesteVercel&titulo_email=TituloDoEmailDeTeste');
+    console.log('Os dados de abertura, disparo, dia, id_hubspot, nome_escola e titulo_email serão enviados para o n8n.');
 });
